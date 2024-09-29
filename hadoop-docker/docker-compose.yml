@@ -1,0 +1,115 @@
+version: '3'
+services:
+  namenode:
+    image: 'bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8'
+    container_name: namenode
+    restart: always
+    ports:
+      - '9870:9870'
+      - '9000:9000'
+    volumes:
+      - 'hadoop_namenode:/hadoop/dfs/name'
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./hadoop.env
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+  datanode:
+    image: 'bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8'
+    container_name: datanode
+    restart: always
+    volumes:
+      - 'hadoop_datanode:/hadoop/dfs/data'
+    environment:
+      SERVICE_PRECONDITION: 'namenode:9870'
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+  resourcemanager:
+    image: 'bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8'
+    container_name: resourcemanager
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: 'namenode:9000 namenode:9870 datanode:9864'
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+  nodemanager1:
+    image: 'bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8'
+    container_name: nodemanager
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: 'namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088'
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+  historyserver:
+    image: 'bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8'
+    container_name: historyserver
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: 'namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088'
+    volumes:
+      - 'hadoop_historyserver:/hadoop/yarn/timeline'
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+  spark-master:
+    image: apache/spark:3.4.0
+    container_name: spark-master
+    ports:
+      - '8080:8080'
+      - '7077:7077'
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master --host
+      spark-master --port 7077 --webui-port 8080
+  spark-worker:
+    image: apache/spark:3.4.0
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - 'SPARK_MASTER_URL=spark://spark-master:7077'
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077
+volumes:
+  hadoop_namenode: null
+  hadoop_datanode: null
+  hadoop_historyserver: null
