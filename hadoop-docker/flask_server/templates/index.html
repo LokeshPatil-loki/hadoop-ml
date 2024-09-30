@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Diabetes Prediction</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white shadow-md rounded-lg p-8 w-full max-w-4xl">
+      <h2 class="text-2xl font-bold mb-6 text-center">Diabetes Prediction</h2>
+      <form id="predictionForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="mb-4">
+          <label
+            for="Pregnancies"
+            class="block text-sm font-medium text-gray-700"
+            >Pregnancies</label
+          >
+          <input
+            type="number"
+            id="Pregnancies"
+            required
+            class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="Glucose" class="block text-sm font-medium text-gray-700"
+            >Glucose</label
+          >
+          <input
+            type="number"
+            id="Glucose"
+            required
+            class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          />
+        </div>
+        <div class="mb-4">
+          <label
+            for="BloodPressure"
+            class="block text-sm font-medium text-gray-700"
+            >Blood Pressure</label
+          >
+          <input
+            type="number"
+            id="BloodPressure"
+            required
+            class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          />
+        </div>
+        <div class="mb-4">
+          <label
+            for="SkinThickness"
+            class="block text-sm font-medium text-gray-700"
+            >Skin Thickness</label
+          >
+          <input
+            type="number"
+            id="SkinThickness"
+            required
+            class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="Insulin" class="block text-sm font-medium text-gray-700"
+            >Insulin</label
+          >
+          <input
+            type="number"
+            id="Insulin"
+            required
+            class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="BMI" class="block text-sm font-medium text-gray-700"
+            >BMI</label
+          >
+          <input
+            type="number"
+            id="BMI"
+            required
+            step="0.1"
+            class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          />
+        </div>
+        <div class="mb-4">
+          <label
+            for="DiabetesPedigreeFunction"
+            class="block text-sm font-medium text-gray-700"
+            >Diabetes Pedigree Function</label
+          >
+          <input
+            type="number"
+            id="DiabetesPedigreeFunction"
+            step="0.001"
+            required
+            class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="Age" class="block text-sm font-medium text-gray-700"
+            >Age</label
+          >
+          <input
+            type="number"
+            id="Age"
+            required
+            class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          />
+        </div>
+        <button
+          type="submit"
+          class="col-span-1 md:col-span-2 w-full bg-blue-500 text-white font-bold py-2 rounded hover:bg-blue-700"
+        >
+          Predict
+        </button>
+      </form>
+    </div>
+
+    <!-- Modal -->
+    <div
+      id="resultModal"
+      class="fixed inset-0 flex items-center justify-center z-50 hidden"
+    >
+      <div class="bg-white rounded-lg shadow-lg p-6 w-11/12 md:w-1/3">
+        <h3 class="text-lg font-bold mb-4">Prediction Result</h3>
+        <p id="predictionResult" class="text-gray-700"></p>
+        <button
+          id="closeModal"
+          class="mt-4 w-full bg-red-500 text-white py-2 rounded hover:bg-red-700"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("predictionForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          const data = {
+            Pregnancies: parseFloat(
+              document.getElementById("Pregnancies").value
+            ),
+            Glucose: parseFloat(document.getElementById("Glucose").value),
+            BloodPressure: parseFloat(
+              document.getElementById("BloodPressure").value
+            ),
+            SkinThickness: parseFloat(
+              document.getElementById("SkinThickness").value
+            ),
+            Insulin: parseFloat(document.getElementById("Insulin").value),
+            BMI: parseFloat(document.getElementById("BMI").value),
+            DiabetesPedigreeFunction: parseFloat(
+              document.getElementById("DiabetesPedigreeFunction").value
+            ),
+            Age: parseFloat(document.getElementById("Age").value),
+          };
+
+          const response = await fetch("/predict", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+          const predictionText =
+            result.prediction === 1
+              ? "Prediction: Diabetes"
+              : "Prediction: No Diabetes";
+          document.getElementById("predictionResult").innerText =
+            predictionText;
+
+          // Show the modal
+          document.getElementById("resultModal").classList.remove("hidden");
+        });
+
+      document
+        .getElementById("closeModal")
+        .addEventListener("click", function () {
+          document.getElementById("resultModal").classList.add("hidden");
+        });
+    </script>
+  </body>
+</html>
