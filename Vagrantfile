@@ -14,17 +14,5 @@ Vagrant.configure("2") do |config|
     vb.memory = "4096"
     vb.cpus = 2
   end
-  config.vm.provision "shell", inline: <<-SHELL
-    sudo yum update
-    sudo yum install -y yum-utils
-    sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
-    sudo systemctl start docker
-    sudo systemctl enable docker.service
-    sudo systemctl enable containerd.service
-    sudo yum install git -y
-    sudo groupadd docker
-    sudo usermod -aG docker $USER
-    newgrp docker
-  SHELL
+  config.vm.provision "shell", path: "setup.sh"
 end
